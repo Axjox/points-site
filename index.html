@@ -7,15 +7,20 @@
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
-            max-width: 600px;
+            max-width: 700px;
             margin: auto;
         }
         .item {
-            margin: 10px 0;
+            margin: 18px 0;
         }
         .label {
             font-weight: bold;
             margin-bottom: 4px;
+        }
+        .defi {
+            font-size: 14px;
+            margin-top: 4px;
+            color: #555;
         }
         .bar {
             height: 24px;
@@ -37,19 +42,31 @@
 <script>
 const url = "https://docs.google.com/spreadsheets/d/1tOqRdsHlJ2QkALVR2xLdnlMRfn8IfcjNSXZ96Ldak3Y/export?format=csv";
 
+// Fonction pour interpréter la valeur du défi
+function interpreteDefi(value) {
+    value = value.trim().toLowerCase();
+
+    if (["oui", "fait", "1", "ok", "true"].includes(value)) {
+        return "Défi du jour : ✔️ Fait";
+    }
+    return "Défi du jour : ❌ Non fait";
+}
+
 function reloadBars() {
     fetch(url)
         .then(r => r.text())
         .then(text => {
             const rows = text.trim().split("\n").map(r => r.split(","));
-            rows.shift(); // enlever l'entête si tu as "Nom, Points"
+            rows.shift(); // Enlève l'entête si nécessaire
 
-            // Convertir en objets + trier par points
+            // Transformation en objets
             let data = rows.map(r => ({
                 name: r[0],
-                points: Number(r[1])
+                points: Number(r[1]),
+                defi: interpreteDefi(r[2] || "")
             }));
 
+            // Tri par points
             data.sort((a, b) => b.points - a.points);
 
             const max = data.length > 0 ? data[0].points : 1;
@@ -63,9 +80,12 @@ function reloadBars() {
                 container.innerHTML += `
                     <div class="item">
                         <div class="label">${item.name} — ${item.points} pts</div>
+
                         <div class="bar-container">
                             <div class="bar" style="width: ${width}%;"></div>
                         </div>
+
+                        <div class="defi">${item.defi}</div>
                     </div>
                 `;
             });
