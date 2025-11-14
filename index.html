@@ -46,7 +46,6 @@
 <script>
 const url = "https://docs.google.com/spreadsheets/d/1tOqRdsHlJ2QkALVR2xLdnlMRfn8IfcjNSXZ96Ldak3Y/export?format=csv";
 
-// Fonction pour interpréter la valeur du défi
 function interpreteDefi(value) {
     value = value.trim().toLowerCase();
 
@@ -63,14 +62,12 @@ function reloadBars() {
             const rows = text.trim().split("\n").map(r => r.split(","));
             rows.shift(); // Enlève l'entête si nécessaire
 
-            // Transformation en objets
             let data = rows.map(r => ({
                 name: r[0],
                 points: Number(r[1]),
                 defi: interpreteDefi(r[2] || "")
             }));
 
-            // Tri par points
             data.sort((a, b) => b.points - a.points);
 
             const max = data.length > 0 ? data[0].points : 1;
@@ -78,15 +75,28 @@ function reloadBars() {
             const container = document.getElementById("container");
             container.innerHTML = "";
 
-            data.forEach(item => {
+            data.forEach((item, index) => {
                 const width = (item.points / max) * 100;
+
+                // Assignation des médailles
+                let medal = "";
+                if (index === 0) medal = "🥇 ";
+                else if (index === 1) medal = "🥈 ";
+                else if (index === 2) medal = "🥉 ";
+
+                // 🔥 Couleur différente selon le rang
+                let color = "#4CAF50"; // couleur par défaut
+
+                if (index === 0) color = "#FFD700";    // OR
+                else if (index === 1) color = "#C0C0C0"; // ARGENT
+                else if (index === 2) color = "#CD7F32"; // BRONZE
 
                 container.innerHTML += `
                     <div class="item">
-                        <div class="label">${item.name} — ${item.points} pts</div>
+                        <div class="label">${medal}${item.name} — ${item.points} pts</div>
 
                         <div class="bar-container">
-                            <div class="bar" style="width: ${width}%;"></div>
+                            <div class="bar" style="width: ${width}%; background: ${color};"></div>
                         </div>
 
                         <div class="defi">${item.defi}</div>
@@ -99,6 +109,3 @@ function reloadBars() {
 setInterval(reloadBars, 5000);
 reloadBars();
 </script>
-
-</body>
-</html>
