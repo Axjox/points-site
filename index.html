@@ -1,111 +1,241 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Classement</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            max-width: 700px;
-            margin: auto;
-        }
-        .item {
-            margin: 18px 0;
-        }
-        .label {
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-        .defi {
-            font-size: 14px;
-            margin-top: 4px;
-            color: #555;
-        }
-        .bar {
-            height: 24px;
-            background: #11b4b9;
-            border-radius: 6px;
-            transition: width 0.5s ease;
-        }
-        .bar-container {
-            width: 100%;
-            background: #ddd;
-            border-radius: 6px;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Défis + Classement</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f0f0f0;
+        margin: 0;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1.3fr 1fr 1fr;
+        gap: 15px;
+    }
+
+    /* Colonnes des défis */
+    .side-column {
+        background: #ffffff;
+        padding: 15px;
+        border-radius: 12px;
+        max-height: 95vh;
+        overflow-y: auto;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+    }
+
+    /* Centre (défi du jour + classement) */
+    .center-column {
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        max-height: 95vh;
+        overflow-y: auto;
+    }
+
+    /* Box défi */
+    .day-box {
+        background: #fafafa;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+
+    .day-num {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    /* Défi du jour */
+    #defiDuJour {
+        background: #fff7db;
+        border: 1px solid #e6d28c;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
+
+    /* Classement */
+    .item {
+        margin-bottom: 20px;
+    }
+
+    .label {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .bar-container {
+        background: #ddd;
+        border-radius: 10px;
+        width: 100%;
+        height: 20px;
+        overflow: hidden;
+    }
+
+    .bar {
+        height: 100%;
+        border-radius: 10px;
+    }
+</style>
 </head>
+
 <body>
-<h2>Classement des Points</h2>
-<div id="defi-du-jour">
-    <strong>Défi du jour :</strong> Staffer Tour des Assos !
+
+<div class="side-column" id="colA"></div>
+<div class="side-column" id="colB"></div>
+
+<div class="center-column">
+    <h2>Défi du jour</h2>
+    <div id="defiDuJour">Chargement...</div>
+
+    <h2>Classement</h2>
+    <div id="container"></div>
 </div>
 
-<div id="container"></div>
+<div class="side-column" id="colC"></div>
+<div class="side-column" id="colD"></div>
 
 <script>
-const url = "https://docs.google.com/spreadsheets/d/1tOqRdsHlJ2QkALVR2xLdnlMRfn8IfcjNSXZ96Ldak3Y/export?format=csv";
+// ==============================
+// CONFIGURATION
+// ==============================
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1tOqRdsHlJ2QkALVR2xLdnlMRfn8IfcjNSXZ96Ldak3Y/export?format=csv";
+const TOTAL_DAYS = 24;
+const TODAY = 7;
 
-function interpreteDefi(value) {
-    value = value.trim().toLowerCase();
+// ==============================
+// LECTURE DU TABLEUR
+// ==============================
+async function fetchSheet() {
+    const res = await fetch(SHEET_CSV_URL);
+    const txt = await res.text();
+    const rows = txt.trim().split("\n").map(r => r.split(","));
 
-    if (["oui", "fait", "1", "ok", "true"].includes(value)) {
-        return "Défi du jour : ✔️ Fait";
+    const challengeMap = {};
+    const classement = [];
+
+    rows.forEach(r => {
+        const n = Number(r[0]);
+
+        // Défis
+        if (!isNaN(n) && n >= 1 && n <= TOTAL_DAYS) {
+            challengeMap[n] = r[1] || "";
+        } 
+        // Classement
+        else {
+            const pts = Number(r[1]);
+            if (!isNaN(pts)) {
+                classement.push({
+                    name: r[0],
+                    points: pts,
+                    defi_fait: r[2] || ""
+                });
+            }
+        }
+    });
+
+    return { challengeMap, classement };
+}
+
+// ==============================
+// AFFICHAGE DES 4 COLONNES DE DÉFIS
+// ==============================
+function renderChallengeColumns(map) {
+    const colA = document.getElementById("colA");
+    const colB = document.getElementById("colB");
+    const colC = document.getElementById("colC");
+    const colD = document.getElementById("colD");
+
+    colA.innerHTML = "";
+    colB.innerHTML = "";
+    colC.innerHTML = "";
+    colD.innerHTML = "";
+
+    // Répartition : 6 défis par colonne (24 / 4)
+    const groups = {
+        A: [1, 6],
+        B: [7, 12],
+        C: [13, 18],
+        D: [19, 24]
+    };
+
+    function fillColumn(col, start, end) {
+        for (let d = start; d <= end; d++) {
+            const div = document.createElement("div");
+            div.className = "day-box";
+
+            div.innerHTML = `
+                <div class="day-num">Jour ${d}</div>
+                <div>${map[d] || "— Pas défini"}</div>
+            `;
+            col.appendChild(div);
+        }
     }
-    return "Défi du jour : ❌ Non fait";
+
+    fillColumn(colA, 1, 6);
+    fillColumn(colB, 7, 12);
+    fillColumn(colC, 13, 18);
+    fillColumn(colD, 19, 24);
 }
 
-function reloadBars() {
-    fetch(url)
-        .then(r => r.text())
-        .then(text => {
-            const rows = text.trim().split("\n").map(r => r.split(","));
-            rows.shift(); // Enlève l'entête si nécessaire
+// ==============================
+// AFFICHAGE DU CLASSEMENT
+// ==============================
+function renderClassement(list) {
+    const container = document.getElementById("container");
+    container.innerHTML = "";
 
-            let data = rows.map(r => ({
-                name: r[0],
-                points: Number(r[1]),
-                defi: interpreteDefi(r[2] || "")
-            }));
+    list.sort((a, b) => b.points - a.points);
+    const max = list[0]?.points || 1;
 
-            data.sort((a, b) => b.points - a.points);
+    list.forEach((item, index) => {
+        let color = "#4CAF50";
+        let medal = "";
 
-            const max = data.length > 0 ? data[0].points : 1;
+        if (index === 0) { color = "#FFD700"; medal = "🥇 "; }
+        else if (index === 1) { color = "#C0C0C0"; medal = "🥈 "; }
+        else if (index === 2) { color = "#CD7F32"; medal = "🥉 "; }
 
-            const container = document.getElementById("container");
-            container.innerHTML = "";
-
-            data.forEach((item, index) => {
-                const width = (item.points / max) * 100;
-
-                // Assignation des médailles
-                let medal = "";
-                if (index === 0) medal = "🥇 ";
-                else if (index === 1) medal = "🥈 ";
-                else if (index === 2) medal = "🥉 ";
-
-                // 🔥 Couleur différente selon le rang
-                let color = "#11B4B9"; // couleur par défaut
-
-                if (index === 0) color = "#FFD700";    // OR
-                else if (index === 1) color = "#C0C0C0"; // ARGENT
-                else if (index === 2) color = "#CD7F32"; // BRONZE
-
-                container.innerHTML += `
-                    <div class="item">
-                        <div class="label">${medal}${item.name} — ${item.points} pts</div>
-
-                        <div class="bar-container">
-                            <div class="bar" style="width: ${width}%; background: ${color};"></div>
-                        </div>
-
-                        <div class="defi">${item.defi}</div>
-                    </div>
-                `;
-            });
-        });
+        container.innerHTML += `
+            <div class="item">
+                <div class="label">${medal}${item.name} — ${item.points} pts</div>
+                <div class="bar-container">
+                    <div class="bar" style="width:${(item.points/max)*100}%; background:${color};"></div>
+                </div>
+                <div>${item.defi_fait}</div>
+            </div>
+        `;
+    });
 }
 
-setInterval(reloadBars, 5000);
-reloadBars();
+// ==============================
+// DÉFI DU JOUR
+// ==============================
+function renderToday(map) {
+    document.getElementById("defiDuJour").textContent =
+        map[TODAY] || "Aucun défi pour aujourd'hui.";
+}
+
+// ==============================
+// RAFRAÎCHISSEMENT GLOBAL
+// ==============================
+async function refreshAll() {
+    const { challengeMap, classement } = await fetchSheet();
+
+    renderChallengeColumns(challengeMap);
+    renderClassement(classement);
+    renderToday(challengeMap);
+}
+
+refreshAll();
+setInterval(refreshAll, 5000);
 </script>
+
+</body>
+</html>
