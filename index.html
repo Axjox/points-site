@@ -3,78 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <title>Défis + Classement</title>
-
 <style>
-    body {
+    html, body {
+        height: 100%;
+        margin: 0;
         font-family: Arial, sans-serif;
         background: #f0f0f0;
-        margin: 0;
-        padding: 20px;
-        display: grid;
-        grid-template-columns: 1fr 1fr 1.3fr 1fr 1fr;
-        gap: 15px;
     }
 
-    /* Colonnes des défis */
-    .side-column {
-        background: #ffffff;
-        padding: 15px;
-        border-radius: 12px;
-        max-height: 95vh;
-        overflow-y: auto;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+    body {
+        display: flex;
+        flex-direction: row;
+        height: 100vh;
     }
 
-    /* Centre (défi du jour + classement) */
-    .center-column {
-        background: #ffffff;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-        max-height: 95vh;
-        overflow-y: auto;
-    }
-
-    /* Box défi */
-    .day-box {
-        background: #fafafa;
-        border: 1px solid #ddd;
+    /* Colonnes défis : 2 à gauche, 2 à droite */
+    .challenge-column {
+        flex: 1;
         padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        font-size: 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
     }
 
-    .day-num {
-        font-weight: bold;
+    .challenge-day {
+        padding: 5px;
+        font-size: 14px;
         margin-bottom: 5px;
     }
 
-    /* Défi du jour */
-    #defiDuJour {
-        background: #fff7db;
-        border: 1px solid #e6d28c;
-        padding: 12px;
-        border-radius: 8px;
-        font-size: 18px;
-        margin-bottom: 20px;
+    /* Centre : défi du jour + classement */
+    .center-column {
+        flex: 2;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
     }
 
-    /* Classement */
+    #defiDuJour {
+        background: #fff7db;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 6px;
+        border: 1px solid #e6d28c;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
     .item {
-        margin-bottom: 20px;
+        margin-bottom: 10px;
     }
 
     .label {
         font-weight: bold;
-        margin-bottom: 5px;
+        margin-bottom: 3px;
     }
 
     .bar-container {
         background: #ddd;
-        border-radius: 10px;
-        width: 100%;
         height: 20px;
+        border-radius: 10px;
         overflow: hidden;
     }
 
@@ -82,36 +71,30 @@
         height: 100%;
         border-radius: 10px;
     }
+
 </style>
 </head>
-
 <body>
 
-<div class="side-column" id="colA"></div>
-<div class="side-column" id="colB"></div>
+<!-- 2 colonnes gauche -->
+<div class="challenge-column" id="colA"></div>
+<div class="challenge-column" id="colB"></div>
 
+<!-- centre -->
 <div class="center-column">
-    <h2>Défi du jour</h2>
     <div id="defiDuJour">Chargement...</div>
-
-    <h2>Classement</h2>
     <div id="container"></div>
 </div>
 
-<div class="side-column" id="colC"></div>
-<div class="side-column" id="colD"></div>
+<!-- 2 colonnes droite -->
+<div class="challenge-column" id="colC"></div>
+<div class="challenge-column" id="colD"></div>
 
 <script>
-// ==============================
-// CONFIGURATION
-// ==============================
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1tOqRdsHlJ2QkALVR2xLdnlMRfn8IfcjNSXZ96Ldak3Y/export?format=csv";
 const TOTAL_DAYS = 24;
 const TODAY = 7;
 
-// ==============================
-// LECTURE DU TABLEUR
-// ==============================
 async function fetchSheet() {
     const res = await fetch(SHEET_CSV_URL);
     const txt = await res.text();
@@ -122,13 +105,9 @@ async function fetchSheet() {
 
     rows.forEach(r => {
         const n = Number(r[0]);
-
-        // Défis
-        if (!isNaN(n) && n >= 1 && n <= TOTAL_DAYS) {
+        if (!isNaN(n) && n >=1 && n <= TOTAL_DAYS) {
             challengeMap[n] = r[1] || "";
-        } 
-        // Classement
-        else {
+        } else {
             const pts = Number(r[1]);
             if (!isNaN(pts)) {
                 classement.push({
@@ -143,98 +122,68 @@ async function fetchSheet() {
     return { challengeMap, classement };
 }
 
-// ==============================
-// AFFICHAGE DES 4 COLONNES DE DÉFIS
-// ==============================
 function renderChallengeColumns(map) {
     const colA = document.getElementById("colA");
     const colB = document.getElementById("colB");
     const colC = document.getElementById("colC");
     const colD = document.getElementById("colD");
 
-    colA.innerHTML = "";
-    colB.innerHTML = "";
-    colC.innerHTML = "";
-    colD.innerHTML = "";
-
-    // Répartition : 6 défis par colonne (24 / 4)
-    const groups = {
-        A: [1, 6],
-        B: [7, 12],
-        C: [13, 18],
-        D: [19, 24]
-    };
+    colA.innerHTML = ""; colB.innerHTML = ""; colC.innerHTML = ""; colD.innerHTML = "";
 
     function fillColumn(col, start, end) {
         for (let d = start; d <= end; d++) {
             const div = document.createElement("div");
-            div.className = "day-box";
-
-            div.innerHTML = `
-                <div class="day-num">Jour ${d}</div>
-                <div>${map[d] || "— Pas défini"}</div>
-            `;
+            div.className = "challenge-day";
+            div.textContent = `Jour ${d}: ${map[d] || "— Pas défini"}`;
             col.appendChild(div);
         }
     }
 
-    fillColumn(colA, 1, 6);
-    fillColumn(colB, 7, 12);
-    fillColumn(colC, 13, 18);
-    fillColumn(colD, 19, 24);
+    fillColumn(colA,1,6);
+    fillColumn(colB,7,12);
+    fillColumn(colC,13,18);
+    fillColumn(colD,19,24);
 }
 
-// ==============================
-// AFFICHAGE DU CLASSEMENT
-// ==============================
 function renderClassement(list) {
     const container = document.getElementById("container");
     container.innerHTML = "";
 
-    list.sort((a, b) => b.points - a.points);
+    list.sort((a,b)=>b.points-a.points);
     const max = list[0]?.points || 1;
 
-    list.forEach((item, index) => {
-        let color = "#4CAF50";
-        let medal = "";
+    list.forEach((item,index)=>{
+        let color="#4CAF50", medal="";
+        if(index===0){ color="#FFD700"; medal="🥇 "; }
+        else if(index===1){ color="#C0C0C0"; medal="🥈 "; }
+        else if(index===2){ color="#CD7F32"; medal="🥉 "; }
 
-        if (index === 0) { color = "#FFD700"; medal = "🥇 "; }
-        else if (index === 1) { color = "#C0C0C0"; medal = "🥈 "; }
-        else if (index === 2) { color = "#CD7F32"; medal = "🥉 "; }
-
-        container.innerHTML += `
-            <div class="item">
-                <div class="label">${medal}${item.name} — ${item.points} pts</div>
-                <div class="bar-container">
-                    <div class="bar" style="width:${(item.points/max)*100}%; background:${color};"></div>
-                </div>
-                <div>${item.defi_fait}</div>
+        const div=document.createElement("div");
+        div.className="item";
+        div.innerHTML=`
+            <div class="label">${medal}${item.name} — ${item.points} pts</div>
+            <div class="bar-container">
+                <div class="bar" style="width:${(item.points/max)*100}%; background:${color};"></div>
             </div>
+            <div>${item.defi_fait}</div>
         `;
+        container.appendChild(div);
     });
 }
 
-// ==============================
-// DÉFI DU JOUR
-// ==============================
-function renderToday(map) {
-    document.getElementById("defiDuJour").textContent =
-        map[TODAY] || "Aucun défi pour aujourd'hui.";
+function renderToday(map){
+    document.getElementById("defiDuJour").textContent= map[TODAY] || "Aucun défi pour aujourd'hui.";
 }
 
-// ==============================
-// RAFRAÎCHISSEMENT GLOBAL
-// ==============================
-async function refreshAll() {
-    const { challengeMap, classement } = await fetchSheet();
-
+async function refreshAll(){
+    const {challengeMap, classement} = await fetchSheet();
     renderChallengeColumns(challengeMap);
     renderClassement(classement);
     renderToday(challengeMap);
 }
 
 refreshAll();
-setInterval(refreshAll, 5000);
+setInterval(refreshAll,5000);
 </script>
 
 </body>
