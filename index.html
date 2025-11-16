@@ -192,9 +192,10 @@ function renderClassement(list) {
     });
 }
 
-// Affiche uniquement le défi du jour en haut
+// Affiche en haut : "Jour X : <texte du défi>"
 function renderToday(map){
-    Jour ${TODAY}document.getElementById("defiDuJour").textContent = map[TODAY] || "Aucun défi pour ce jour.";
+    const titre = `Jour ${TODAY} : ${map[TODAY] || "Aucun défi pour ce jour."}`;
+    document.getElementById("defiDuJour").textContent = titre;
 }
 
 async function refreshAll(){
