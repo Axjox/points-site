@@ -43,7 +43,7 @@
 
     #defiDuJour {
         background: #fff7db;
-        padding: 10px;
+        padding: 12px;
         margin-bottom: 10px;
         border-radius: 6px;
         border: 1px solid #e6d28c;
@@ -71,7 +71,6 @@
         height: 100%;
         border-radius: 10px;
     }
-
 </style>
 </head>
 <body>
@@ -93,7 +92,7 @@
 <script>
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1tOqRdsHlJ2QkALVR2xLdnlMRfn8IfcjNSXZ96Ldak3Y/export?format=csv";
 const TOTAL_DAYS = 24;
-const TODAY = 7;
+const TODAY = 7; // jour actif
 
 async function fetchSheet() {
     const res = await fetch(SHEET_CSV_URL);
@@ -122,6 +121,7 @@ async function fetchSheet() {
     return { challengeMap, classement };
 }
 
+// Affiche tous les défis dans les colonnes (tu peux décider de cacher les futurs si tu veux)
 function renderChallengeColumns(map) {
     const colA = document.getElementById("colA");
     const colB = document.getElementById("colB");
@@ -134,7 +134,8 @@ function renderChallengeColumns(map) {
         for (let d = start; d <= end; d++) {
             const div = document.createElement("div");
             div.className = "challenge-day";
-            div.textContent = `Jour ${d}: ${map[d] || "— Pas défini"}`;
+            // affiche toujours le texte du défi (ou vide si pas défini)
+            div.textContent = `Jour ${d}: ${map[d] || ""}`;
             col.appendChild(div);
         }
     }
@@ -171,8 +172,9 @@ function renderClassement(list) {
     });
 }
 
+// Affiche uniquement le défi du jour en haut
 function renderToday(map){
-    document.getElementById("defiDuJour").textContent= map[TODAY] || "Aucun défi pour aujourd'hui.";
+    document.getElementById("defiDuJour").textContent = map[TODAY] || "Aucun défi pour ce jour.";
 }
 
 async function refreshAll(){
