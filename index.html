@@ -177,7 +177,15 @@ function renderChallengeColumns(map) {
     fillColumn(colD, 19, 24);
 }
 
+function interpreteDefi(value) {
+    value = value.trim().toLowerCase();
 
+    if (["oui", "fait", "1", "ok", "true"].includes(value)) {
+        return "Défi du jour : ✔️ Fait";
+    }
+    return "Défi du jour : ❌ Non fait";
+}
+    
 function renderClassement(list) {
     const container = document.getElementById("container");
     container.innerHTML = "";
