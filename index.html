@@ -18,19 +18,31 @@
     }
 
     /* Colonnes défis : 2 à gauche, 2 à droite */
-    .challenge-column {
-        flex: 1;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-    }
+/* Colonnes défis : maintenant chaque colonne remplit toute la hauteur,
+   et chaque case se répartit en parts égales */
+.challenge-column {
+    flex: 1;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* ÉTIRE les cases du haut en bas */
+}
 
-    .challenge-day {
-        padding: 5px;
-        font-size: 14px;
-        margin-bottom: 5px;
-    }
+/* Chaque défi devient une boîte rectangulaire */
+.challenge-day {
+    background: white;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    flex: 1;                  /* occupe un espace égal dans la colonne */
+    display: flex;
+    align-items: center;      /* centrer verticalement */
+    justify-content: center;  /* centrer horizontalement */
+    margin: 5px 0;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 
     /* Centre : défi du jour + classement */
     .center-column {
