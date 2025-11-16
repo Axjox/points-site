@@ -128,23 +128,43 @@ function renderChallengeColumns(map) {
     const colC = document.getElementById("colC");
     const colD = document.getElementById("colD");
 
-    colA.innerHTML = ""; colB.innerHTML = ""; colC.innerHTML = ""; colD.innerHTML = "";
+    colA.innerHTML = "";
+    colB.innerHTML = "";
+    colC.innerHTML = "";
+    colD.innerHTML = "";
 
     function fillColumn(col, start, end) {
         for (let d = start; d <= end; d++) {
             const div = document.createElement("div");
             div.className = "challenge-day";
-            // affiche toujours le texte du défi (ou vide si pas défini)
-            div.textContent = `Jour ${d}: ${map[d] || ""}`;
+
+            if (d < TODAY) {
+                // Jour déjà passé → afficher le défi
+                div.textContent = `Jour ${d} : ${map[d] || ""}`;
+
+            } else if (d === TODAY) {
+                // Jour actuel → afficher le défi du jour
+                div.textContent = `Jour ${d} : ${map[d] || ""}`;
+
+                // Optionnel : tu peux surligner le jour actif
+                div.style.fontWeight = "bold";
+                div.style.color = "#b8860b";
+
+            } else {
+                // Jour futur → afficher seulement le numéro
+                div.textContent = `Jour ${d}`;
+            }
+
             col.appendChild(div);
         }
     }
 
-    fillColumn(colA,1,6);
-    fillColumn(colB,7,12);
-    fillColumn(colC,13,18);
-    fillColumn(colD,19,24);
+    fillColumn(colA, 1, 6);
+    fillColumn(colB, 7, 12);
+    fillColumn(colC, 13, 18);
+    fillColumn(colD, 19, 24);
 }
+
 
 function renderClassement(list) {
     const container = document.getElementById("container");
