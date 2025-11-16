@@ -1,233 +1,245 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>Défis + Classement</title>
-<style>
-    html, body {
-        height: 100%;
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: #f0f0f0;
-    }
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+    <meta charset="UTF-8">
+    <title>Défis + Classement</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
 
-    body {
-        display: flex;
-        flex-direction: row;
-        height: 100vh;
-    }
+        body {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
 
-    /* Colonnes défis : 2 à gauche, 2 à droite */
-/* Colonnes défis : maintenant chaque colonne remplit toute la hauteur,
-   et chaque case se répartit en parts égales */
-.challenge-column {
-    flex: 1;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* ÉTIRE les cases du haut en bas */
-}
-
-/* Chaque défi devient une boîte rectangulaire */
-.challenge-day {
-    background: white;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-    flex: 1;                  /* occupe un espace égal dans la colonne */
-    display: flex;
-    align-items: center;      /* centrer verticalement */
-    justify-content: center;  /* centrer horizontalement */
-    margin: 5px 0;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-
-    /* Centre : défi du jour + classement */
-    .center-column {
-        flex: 2;
+        /* Colonnes défis : 2 à gauche, 2 à droite */
+    /* Colonnes défis : maintenant chaque colonne remplit toute la hauteur,
+    et chaque case se répartit en parts égales */
+    .challenge-column {
+        flex: 1;
         padding: 10px;
         display: flex;
         flex-direction: column;
-        overflow-y: auto;
+        justify-content: space-between; /* ÉTIRE les cases du haut en bas */
     }
 
-    #defiDuJour {
-        background: #fff7db;
-        padding: 12px;
-        margin-bottom: 10px;
+    /* Chaque défi devient une boîte rectangulaire */
+    .challenge-day {
+        background: white;
+        padding: 10px;
         border-radius: 6px;
-        border: 1px solid #e6d28c;
-        font-size: 18px;
-        flex-shrink: 0;
+        border: 1px solid #ddd;
+        flex: 1;                  /* occupe un espace égal dans la colonne */
+        display: flex;
+        align-items: center;      /* centrer verticalement */
+        justify-content: center;  /* centrer horizontalement */
+        margin: 5px 0;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    .item {
-        margin-bottom: 10px;
-    }
 
-    .label {
-        font-weight: bold;
-        margin-bottom: 3px;
-    }
-
-    .bar-container {
-        background: #ddd;
-        height: 20px;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .bar {
-        height: 100%;
-        border-radius: 10px;
-    }
-</style>
-</head>
-<body>
-
-<!-- 2 colonnes gauche -->
-<div class="challenge-column" id="colA"></div>
-<div class="challenge-column" id="colB"></div>
-
-<!-- centre -->
-<div class="center-column">
-    <div id="defiDuJour">Chargement...</div>
-    <div id="container"></div>
-</div>
-
-<!-- 2 colonnes droite -->
-<div class="challenge-column" id="colC"></div>
-<div class="challenge-column" id="colD"></div>
-
-<script>
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1tOqRdsHlJ2QkALVR2xLdnlMRfn8IfcjNSXZ96Ldak3Y/export?format=csv";
-const TOTAL_DAYS = 24;
-const TODAY = 7; // jour actif
-
-async function fetchSheet() {
-    const res = await fetch(SHEET_CSV_URL);
-    const txt = await res.text();
-    const rows = txt.trim().split("\n").map(r => r.split(","));
-
-    const challengeMap = {};
-    const classement = [];
-
-    rows.forEach(r => {
-        const n = Number(r[0]);
-        if (!isNaN(n) && n >=1 && n <= TOTAL_DAYS) {
-            challengeMap[n] = r[1] || "";
-        } else {
-            const pts = Number(r[1]);
-            if (!isNaN(pts)) {
-                classement.push({
-                    name: r[0],
-                    points: pts,
-                    defi_fait: r[2] || ""
-                });
-            }
+        /* Centre : défi du jour + classement */
+        .center-column {
+            flex: 2;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
         }
-    });
 
-    return { challengeMap, classement };
-}
+        #defiDuJour {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 18px;
+            flex-shrink: 0;
+            margin: 5px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-// Affiche tous les défis dans les colonnes (tu peux décider de cacher les futurs si tu veux)
-function renderChallengeColumns(map) {
-    const colA = document.getElementById("colA");
-    const colB = document.getElementById("colB");
-    const colC = document.getElementById("colC");
-    const colD = document.getElementById("colD");
+        .item {
+            margin-bottom: 10px;
+        }
 
-    colA.innerHTML = "";
-    colB.innerHTML = "";
-    colC.innerHTML = "";
-    colD.innerHTML = "";
+        .label {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
 
-    function fillColumn(col, start, end) {
-        for (let d = start; d <= end; d++) {
-            const div = document.createElement("div");
-            div.className = "challenge-day";
+        .bar-container {
+            background: #ddd;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
 
-            if (d < TODAY) {
-                // Jour déjà passé → afficher le défi
-                div.textContent = `Jour ${d} : ${map[d] || ""}`;
+        .bar {
+            height: 100%;
+            border-radius: 10px;
+        }
+    </style>
+    </head>
+    <body>
 
-            } else if (d === TODAY) {
-                // Jour actuel → afficher le défi du jour
-                div.textContent = `Jour ${d} : ${map[d] || ""}`;
+    <!-- 2 colonnes gauche -->
+    <div class="challenge-column" id="colA"></div>
+    <div class="challenge-column" id="colB"></div>
 
-                // Optionnel : tu peux surligner le jour actif
-                div.style.fontWeight = "bold";
-                div.style.color = "#11b4b9";
+    <!-- centre -->
+    <div class="center-column">
+        <div id="defiDuJour">Chargement...</div>
+        <div id="container"></div>
+    </div>
 
+    <!-- 2 colonnes droite -->
+    <div class="challenge-column" id="colC"></div>
+    <div class="challenge-column" id="colD"></div>
+
+    <script>
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1tOqRdsHlJ2QkALVR2xLdnlMRfn8IfcjNSXZ96Ldak3Y/export?format=csv";
+    const TOTAL_DAYS = 24;
+    const TODAY = 7; // jour actif
+
+    async function fetchSheet() {
+        const res = await fetch(SHEET_CSV_URL);
+        const txt = await res.text();
+        const rows = txt.trim().split("\n").map(r => r.split(","));
+
+        const challengeMap = {};
+        const classement = [];
+
+        rows.forEach(r => {
+            const n = Number(r[0]);
+            if (!isNaN(n) && n >=1 && n <= TOTAL_DAYS) {
+                challengeMap[n] = r[1] || "";
             } else {
-                // Jour futur → afficher seulement le numéro
-                div.textContent = `Jour ${d}`;
+                const pts = Number(r[1]);
+                if (!isNaN(pts)) {
+                    classement.push({
+                        name: r[0],
+                        points: pts,
+                        defi_fait: r[2] || ""
+                    });
+                }
             }
+        });
 
-            col.appendChild(div);
+        return { challengeMap, classement };
+    }
+
+    // Affiche tous les défis dans les colonnes (tu peux décider de cacher les futurs si tu veux)
+    function renderChallengeColumns(map) {
+        const colA = document.getElementById("colA");
+        const colB = document.getElementById("colB");
+        const colC = document.getElementById("colC");
+        const colD = document.getElementById("colD");
+
+        colA.innerHTML = "";
+        colB.innerHTML = "";
+        colC.innerHTML = "";
+        colD.innerHTML = "";
+
+        function fillColumn(col, start, end) {
+            for (let d = start; d <= end; d++) {
+                const div = document.createElement("div");
+                div.className = "challenge-day";
+
+                if (d < TODAY) {
+                    // Jour déjà passé → afficher le défi
+                    div.textContent = `Jour ${d} : ${map[d] || ""}`;
+
+                } else if (d === TODAY) {
+                    // Jour actuel → afficher le défi du jour
+                    div.textContent = `Jour ${d} : ${map[d] || ""}`;
+
+                    // Optionnel : tu peux surligner le jour actif
+                    div.style.fontWeight = "bold";
+                    div.style.color = "#11b4b9";
+
+                } else {
+                    // Jour futur → afficher seulement le numéro
+                    div.textContent = `Jour ${d}`;
+                }
+
+                col.appendChild(div);
+            }
         }
+
+        fillColumn(colA, 1, 6);
+        fillColumn(colB, 7, 12);
+        fillColumn(colC, 13, 18);
+        fillColumn(colD, 19, 24);
     }
 
-    fillColumn(colA, 1, 6);
-    fillColumn(colB, 7, 12);
-    fillColumn(colC, 13, 18);
-    fillColumn(colD, 19, 24);
-}
+    function interpreteDefi(value) {
+        value = value.trim().toLowerCase();
 
-function interpreteDefi(value) {
-    value = value.trim().toLowerCase();
-
-    if (["oui", "fait", "1", "ok", "true"].includes(value)) {
-        return "Défi du jour : ✔️ Fait";
+        if (["oui", "fait", "1", "ok", "true"].includes(value)) {
+            return "Défi du jour : ✔️ Fait";
+        }
+        return "Défi du jour : ❌ Non fait";
     }
-    return "Défi du jour : ❌ Non fait";
-}
-    
-function renderClassement(list) {
-    const container = document.getElementById("container");
-    container.innerHTML = "";
+        
+    function renderClassement(list) {
+        const container = document.getElementById("container");
+        container.innerHTML = "";
 
-    list.sort((a,b)=>b.points-a.points);
-    const max = list[0]?.points || 1;
+        list.sort((a,b)=>b.points-a.points);
+        const max = list[0]?.points || 1;
 
-    list.forEach((item,index)=>{
-        let color="#4CAF50", medal="";
-        if(index===0){ color="#FFD700"; medal="🥇 "; }
-        else if(index===1){ color="#C0C0C0"; medal="🥈 "; }
-        else if(index===2){ color="#CD7F32"; medal="🥉 "; }
+        list.forEach((item,index)=>{
+            let color="#4CAF50", medal="";
+            if(index===0){ color="#FFD700"; medal="🥇 "; }
+            else if(index===1){ color="#C0C0C0"; medal="🥈 "; }
+            else if(index===2){ color="#CD7F32"; medal="🥉 "; }
 
-        const div=document.createElement("div");
-        div.className="item";
-        div.innerHTML=`
-            <div class="label">${medal}${item.name} — ${item.points} pts</div>
-            <div class="bar-container">
-                <div class="bar" style="width:${(item.points/max)*100}%; background:${color};"></div>
-            </div>
-            <div>${item.defi_fait}</div>
-        `;
-        container.appendChild(div);
-    });
-}
+            // Calcul du statut
+            const status = (item.defi_fait && item.defi_fait.trim().toLowerCase() === "oui") 
+                            ? "✔️ Défi fait" 
+                            : "❌ Défi pas encore fait";
 
-// Affiche en haut : "Jour X : <texte du défi>"
-function renderToday(map){
-    const titre = `Jour ${TODAY} : ${map[TODAY] || "Aucun défi pour ce jour."}`;
-    document.getElementById("defiDuJour").textContent = titre;
-}
+            const div=document.createElement("div");
+            div.className="item";
+            div.innerHTML=`
+                <div class="label">${medal}${item.name} — ${item.points} pts</div>
+                <div class="bar-container">
+                    <div class="bar" style="width:${(item.points/max)*100}%; background:${color};"></div>
+                </div>
+                <div>${status}</div>
+            `;
 
-async function refreshAll(){
-    const {challengeMap, classement} = await fetchSheet();
-    renderChallengeColumns(challengeMap);
-    renderClassement(classement);
-    renderToday(challengeMap);
-}
+            container.appendChild(div);
+        });
+    }
 
-refreshAll();
-setInterval(refreshAll,5000);
-</script>
 
-</body>
-</html>
+    // Affiche en haut : "Jour X : <texte du défi>"
+    function renderToday(map){
+        const titre = `Jour ${TODAY} : ${map[TODAY] || "Aucun défi pour ce jour."}`;
+        const defiEl = document.getElementById("defiDuJour");
+        defiEl.textContent = titre;
+        defiEl.style.fontWeight = "bold";
+        defiEl.style.color = "#11b4b9";
+    }
+
+    async function refreshAll(){
+        const {challengeMap, classement} = await fetchSheet();
+        renderChallengeColumns(challengeMap);
+        renderClassement(classement);
+        renderToday(challengeMap);
+    }
+
+    refreshAll();
+    setInterval(refreshAll,5000);
+    </script>
+
+    </body>
+    </html>
